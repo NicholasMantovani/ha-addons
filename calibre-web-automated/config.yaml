@@ -17,9 +17,8 @@ init: false
 
 # Home Assistant Ingress: the web UI opens inside Home Assistant (sidebar /
 # "Open Web UI") and works wherever Home Assistant is reachable, including
-# remotely. nginx on 8099 maps X-Ingress-Path to Calibre-Web's X-Script-Name.
+# remotely. nginx on 8099 (default ingress port) maps X-Ingress-Path to Calibre-Web's X-Script-Name.
 ingress: true
-ingress_port: 8099
 panel_icon: mdi:bookshelf
 
 # Direct port: LAN access, OPDS readers and Kobo Sync (these cannot use
