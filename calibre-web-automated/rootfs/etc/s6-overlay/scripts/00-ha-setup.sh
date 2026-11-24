@@ -144,6 +144,26 @@ export_env PUID "${OPT_PUID}"
 export_env PGID "${OPT_PGID}"
 export_env TZ "${OPT_TZ}"
 
+# Extra environment variables (option `env_vars`), e.g. NETWORK_SHARE_MODE, TRUSTED_PROXY_COUNT.
+# PUID / PGID / TZ have dedicated options and cannot be overridden here.
+while IFS= read -r entry; do
+    [[ -n "${entry}" ]] || continue
+    name="$(jq -r '.name' <<<"${entry}")"
+    value="$(jq -r '.value' <<<"${entry}")"
+    if [[ ! "${name}" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]]; then
+        warn "Ignoring env_vars entry with invalid name '${name}'."
+        continue
+    fi
+    case "${name}" in
+        PUID | PGID | TZ)
+            warn "Ignoring env_vars entry '${name}': use the dedicated option instead."
+            continue
+            ;;
+    esac
+    export_env "${name}" "${value}"
+    log "Extra environment variable set: ${name}"
+done < <(jq -c '.env_vars[]?' "${OPTIONS_FILE}")
+
 if [[ "${PUID}" == "0" || "${PGID}" == "0" ]]; then
     log "Running with PUID=${PUID} / PGID=${PGID} (root): files are fully accessible via Samba."
 fi

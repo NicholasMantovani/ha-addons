@@ -1,94 +1,92 @@
-<p align="center">
-  <img src=".github/images/banner.png" alt="Calibre-Web Automated add-on logo" width="320">
-</p>
+# Nicholas Mantovani's Home Assistant Add-ons
 
-# Home Assistant Add-on: Calibre-Web Automated
-
-[![Release](https://img.shields.io/github/v/release/NicholasMantovani/ha-calibre-web-automated?sort=semver)](https://github.com/NicholasMantovani/ha-calibre-web-automated/releases/latest)
-[![Lint](https://github.com/NicholasMantovani/ha-calibre-web-automated/actions/workflows/lint.yml/badge.svg)](https://github.com/NicholasMantovani/ha-calibre-web-automated/actions/workflows/lint.yml)
-[![Sync upstream](https://github.com/NicholasMantovani/ha-calibre-web-automated/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/NicholasMantovani/ha-calibre-web-automated/actions/workflows/sync-upstream.yml)
+[![Lint](https://github.com/NicholasMantovani/ha-addons/actions/workflows/lint.yml/badge.svg)](https://github.com/NicholasMantovani/ha-addons/actions/workflows/lint.yml)
+[![Sync upstream](https://github.com/NicholasMantovani/ha-addons/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/NicholasMantovani/ha-addons/actions/workflows/sync-upstream.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-![Supports aarch64](https://img.shields.io/badge/aarch64-yes-green.svg)
-![Supports amd64](https://img.shields.io/badge/amd64-yes-green.svg)
 
-[Calibre-Web Automated][cwa] packaged as a Home Assistant add-on: a modern web
-e-book library with automatic ingest and conversion, metadata enforcement,
-OPDS and Kobo Sync, with your books stored in `/share` or `/media`.
+Home Assistant add-ons for a self-hosted e-book setup. Each add-on is a thin,
+configurable layer on top of the official upstream image.
 
 ## Installation
 
-[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FNicholasMantovani%2Fha-calibre-web-automated)
+[![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FNicholasMantovani%2Fha-addons)
 
 1. Click the button above, or in Home Assistant go to
    **Settings → Add-ons → Add-on Store → ⋮ → Repositories** and add
-   `https://github.com/NicholasMantovani/ha-calibre-web-automated`.
-2. Find **Calibre-Web Automated** in the store and click **Install**. The
-   add-on is built locally on top of the official upstream image, so the first
-   installation downloads about 1 GB.
-3. Review the **Configuration** tab (library and ingest paths, PUID/PGID,
-   timezone), then **Start** the add-on.
-4. Click **Open Web UI** and log in with `admin` / `admin123`. Change the
-   password right away.
+   `https://github.com/NicholasMantovani/ha-addons`.
+2. Install the add-ons you want from the store.
+3. Review each add-on's **Configuration** tab, then start it.
 
-The full documentation is in the add-on's **Documentation** tab
-([DOCS.md](calibre-web-automated/DOCS.md)).
+Add-ons are built locally on top of the upstream images, so the first
+installation downloads the full upstream image (about 1 GB each).
 
-## Add-ons in this repository
+## Add-ons
 
-| Add-on | Description |
-| ------ | ----------- |
-| [Calibre-Web Automated](calibre-web-automated/) | Web e-book library with auto-ingest, conversion, OPDS and Kobo Sync |
+| | Add-on | Version | Description |
+| --- | --- | --- | --- |
+| <img src="calibre-web-automated/icon.png" width="48"> | [Calibre-Web Automated](calibre-web-automated/) | [![Version](https://img.shields.io/github/v/release/NicholasMantovani/ha-addons?filter=calibre-web-automated-*&label=)](https://github.com/NicholasMantovani/ha-addons/releases?q=calibre-web-automated) | E-book library with automatic ingest, conversion, OPDS and Kobo Sync |
+| <img src="shelfmark/icon.png" width="48"> | [Shelfmark](shelfmark/) | [![Version](https://img.shields.io/github/v/release/NicholasMantovani/ha-addons?filter=shelfmark-*&label=)](https://github.com/NicholasMantovani/ha-addons/releases?q=shelfmark) | Search and download books and audiobooks, imported automatically into Calibre-Web Automated |
 
-## How it works
+### Using them together
 
-- **Base image:** the official `crocodilestick/calibre-web-automated` image
-  (tag pinned in [`build.yaml`](calibre-web-automated/build.yaml)), with a
-  thin Home Assistant layer on top.
-- **Startup:** an s6-overlay v3 oneshot (`init-ha-setup`) runs before the
-  LinuxServer.io / CWA init chain. It reads `/data/options.json`, exports
-  `PUID`/`PGID`/`TZ`, and bind-mounts:
-  - `/data/cwa-config` → `/config` (persistent app settings)
-  - `library_path` → `/calibre-library`
-  - `ingest_path` → `/cwa-book-ingest` (bind mount, so inotify works)
-- **Privileges:** `SYS_ADMIN` and AppArmor disabled, needed only for the bind
-  mounts.
+```text
+Shelfmark ──downloads──▶ /media/calibre/ingest ──CWA imports──▶ /media/calibre/library
+    ▲                                                                   │
+    └──────────── "Library Check" reads metadata.db (read-only) ◀───────┘
+```
 
-## Automatic updates
+1. In **Calibre-Web Automated**, set `library_path: /media/calibre/library`
+   and `ingest_path: /media/calibre/ingest`.
+2. In **Shelfmark**, keep the defaults (`download_path: /media/calibre/ingest`,
+   `calibre_library_path: /media/calibre/library`).
 
-The [`sync-upstream`](.github/workflows/sync-upstream.yml) workflow runs every
-Monday at 06:00 UTC (and on demand). When a new upstream release is published
-**and** its Docker image is available for amd64 and arm64, it:
+If you prefer `/share`, use the same `/share/...` paths in both add-ons.
 
-1. updates `version` in `config.yaml` (with the `v` prefix removed);
-2. updates the image tag in `build.yaml` and `Dockerfile`;
-3. adds an entry to `CHANGELOG.md` linking the upstream release notes;
-4. commits and pushes to `main`;
-5. publishes a GitHub release `v<version>` with the changelog entry as notes.
+## Updates and releases
 
-Home Assistant then shows the update in the add-on store.
+Updates are deliberately simple and under your control:
 
-## Releases
+- **[`.github/addons.yaml`](.github/addons.yaml)** lists, for each add-on,
+  the upstream repository and image to follow and whether to update it
+  automatically (`auto_update: true|false`).
+- **[`sync-upstream`](.github/workflows/sync-upstream.yml)** runs every Monday
+  at 06:00 UTC. For each add-on with `auto_update: true`, when a new upstream
+  release exists **and** its image is published for every architecture, it:
+  1. updates `version` in `config.yaml` (with the `v` prefix removed);
+  2. updates the image tag in `build.yaml` and `Dockerfile`;
+  3. adds an entry to `CHANGELOG.md` linking the upstream release notes;
+  4. commits and pushes to `main`.
 
-The [`release`](.github/workflows/release.yml) workflow publishes a GitHub
-release for the version in `config.yaml` whenever `main` changes (and is
-called by `sync-upstream` after an automatic bump). It is idempotent: if the
-release `v<version>` already exists, nothing happens. To release a manual
-change, bump `version` in `config.yaml`, add a `## <version>` section to
-`CHANGELOG.md` and push to `main`.
+  You can also run it manually from the **Actions** tab, for a single add-on
+  (even one with `auto_update: false`) and/or as a **dry run** that only shows
+  what would change.
+- **[`release`](.github/workflows/release.yml)** publishes a GitHub release
+  `<addon>-v<version>` (e.g. `shelfmark-v1.7.0`) for every add-on version that
+  has not been released yet, using its `CHANGELOG.md` section as notes. It
+  runs on every push to `main` and after each sync.
 
-> Commits pushed with the default `GITHUB_TOKEN` do not trigger other
-> workflows, so `lint.yml` does not run on those automatic commits. If `main`
-> is branch-protected, allow `github-actions[bot]` to push or use a PAT.
+### Manual changes
 
-## Maintainer notes
+To ship an add-on-only change (no upstream update), add a fourth number to
+the version, e.g. `4.0.8` → `4.0.8.1`. Add a `## 4.0.8.1` section to the
+add-on's `CHANGELOG.md` and push: the release is created and Home Assistant
+offers the update. Don't use a `-1` suffix: semver treats `4.0.8-1` as a
+pre-release, lower than `4.0.8`.
 
-- To ship add-on-only fixes between upstream releases, bump the version with a
-  suffix (for example `4.0.8-1`) so Home Assistant offers the update.
+> Commits pushed by the workflow with the default `GITHUB_TOKEN` do not
+> trigger `lint.yml`. If `main` is branch-protected, allow
+> `github-actions[bot]` to push or use a PAT.
+
+### Adding a new add-on
+
+1. Create a folder with `config.yaml`, `build.yaml`, `Dockerfile`, `DOCS.md`,
+   `README.md`, `icon.png`, `logo.png` and a `CHANGELOG.md` containing the
+   `<!-- next-entry -->` marker.
+2. Add an entry to `.github/addons.yaml`.
+3. Push: lint, release and weekly sync pick it up automatically.
 
 ## License
 
 The add-on packaging in this repository is released under the
-[MIT License](LICENSE). Calibre-Web Automated itself is licensed under
-GPL-3.0 by its authors.
-
-[cwa]: https://github.com/crocodilestick/Calibre-Web-Automated
+[MIT License](LICENSE). Each upstream application keeps its own license:
+Calibre-Web Automated (GPL-3.0), Shelfmark (MIT).

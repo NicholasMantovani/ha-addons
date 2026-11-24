@@ -6,7 +6,7 @@ slug: calibre_web_automated
 description: >-
   Calibre-Web Automated: a modern web e-book library with automatic ingest,
   format conversion, metadata enforcement, OPDS and Kobo Sync.
-url: https://github.com/NicholasMantovani/ha-calibre-web-automated
+url: https://github.com/NicholasMantovani/ha-addons/tree/main/calibre-web-automated
 arch:
   - aarch64
   - amd64
@@ -45,9 +45,13 @@ options:
   puid: 0
   pgid: 0
   timezone: Europe/Rome
+  env_vars: []
 schema:
   library_path: str
   ingest_path: str
   puid: int(0,65535)
   pgid: int(0,65535)
   timezone: str
+  env_vars:
+    - name: match(^[A-Za-z_][A-Za-z0-9_]*$)
+      value: str

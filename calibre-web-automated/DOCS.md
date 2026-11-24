@@ -27,6 +27,7 @@ ingest_path: /share/calibre/ingest
 puid: 0
 pgid: 0
 timezone: Europe/Rome
+env_vars: []
 ```
 
 ### `library_path`
@@ -51,6 +52,26 @@ ownership on the next start (once, recursively).
 
 An IANA timezone name such as `Europe/Rome` or `America/New_York`. Invalid
 values fall back to `Etc/UTC` and a warning is logged.
+
+### `env_vars`
+
+Extra environment variables passed to Calibre-Web Automated, for options the
+add-on does not expose directly. Example:
+
+```yaml
+env_vars:
+  - name: NETWORK_SHARE_MODE
+    value: "true"
+  - name: TRUSTED_PROXY_COUNT
+    value: "2"
+```
+
+- `NETWORK_SHARE_MODE=true`: use polling instead of inotify. Enable it when the
+  library or ingest folder lives on a NAS (SMB/NFS).
+- `TRUSTED_PROXY_COUNT`: number of reverse proxies in front of CWA.
+
+See the [upstream documentation][cwa] for all variables. `PUID`, `PGID` and
+`TZ` are ignored here: use the dedicated options.
 
 ## Choosing between `/share` and `/media`
 
@@ -79,8 +100,9 @@ round).
 > **Network storage:** a NAS share added in Home Assistant under
 > *Settings → System → Storage* with usage **Media** or **Share** appears
 > under `/media/<name>` or `/share/<name>` and works as well. Keep in mind that
-> SQLite (`metadata.db`) over SMB/NFS can be slow, and some NAS do not deliver
-> inotify events for files written by other machines.
+> SQLite (`metadata.db`) over SMB/NFS can be slow, and NAS shares usually do
+> not deliver inotify events: add `NETWORK_SHARE_MODE=true` to
+> [`env_vars`](#env_vars) in that case.
 
 ## Automatic ingest
 
@@ -155,6 +177,14 @@ Tips:
 
 Application data survives add-on updates and restarts. Uninstalling the
 add-on removes `/data`, but never touches the library in `/share` or `/media`.
+
+## Using it with Shelfmark
+
+The **Shelfmark** add-on from the same repository can search and
+download books straight into the ingest folder: by default it saves to
+`/media/calibre/ingest`, so with `ingest_path: /media/calibre/ingest` every
+download is imported automatically. If you keep the default
+`/share/calibre/ingest`, set Shelfmark's `download_path` to the same folder.
 
 ## Security notes
 

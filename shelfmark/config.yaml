@@ -1,0 +1,64 @@
+# Home Assistant add-on configuration
+# https://developers.home-assistant.io/docs/add-ons/configuration
+name: Shelfmark
+version: "1.7.0"
+slug: shelfmark
+description: >-
+  Search and download books and audiobooks from multiple sources, with
+  automatic import into Calibre-Web Automated.
+url: https://github.com/NicholasMantovani/ha-addons/tree/main/shelfmark
+arch:
+  - aarch64
+  - amd64
+
+# The upstream image uses dumb-init as PID 1: do not add docker-init on top.
+init: false
+
+ports:
+  8084/tcp: 8084
+ports_description:
+  8084/tcp: Web interface
+webui: "http://[HOST]:[PORT:8084]"
+
+# addon_config -> /config (Shelfmark settings, database, artwork cache).
+#   Reachable on the host as /addon_configs/<slug>/ (Samba "addon_configs"
+#   share) and included in add-on backups.
+# share / media -> download destination (e.g. the CWA ingest folder) and
+#   read-only access to the Calibre library for "Library Check".
+map:
+  - type: addon_config
+    read_only: false
+  - type: share
+    read_only: false
+  - type: media
+    read_only: false
+
+# NET_ADMIN / NET_RAW are only used when network_mode is "tor" (iptables
+# rules that route all traffic through Tor).
+privileged:
+  - NET_ADMIN
+  - NET_RAW
+
+options:
+  download_path: /media/calibre/ingest
+  puid: 0
+  pgid: 0
+  timezone: Europe/Rome
+  network_mode: direct
+  calibre_library_check: true
+  calibre_library_path: /media/calibre/library
+  log_level: info
+  env_vars: []
+schema:
+  download_path: str
+  puid: int(0,65535)
+  pgid: int(0,65535)
+  timezone: str
+  network_mode: list(direct|tor)
+  calibre_library_check: bool
+  calibre_library_path: str
+  calibre_web_url: url?
+  log_level: list(debug|info|warning|error)
+  env_vars:
+    - name: match(^[A-Za-z_][A-Za-z0-9_]*$)
+      value: str

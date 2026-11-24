@@ -1,0 +1,38 @@
+---
+configuration:
+  download_path:
+    name: Percorso download
+    description: >-
+      Dove salvare i libri scaricati (dentro /share o /media). Usa la cartella
+      di ingest di Calibre-Web Automated per l'importazione automatica.
+  puid:
+    name: ID utente (PUID)
+    description: UID usato per scrivere i file scaricati. 0 = root (consigliato con Calibre-Web Automated).
+  pgid:
+    name: ID gruppo (PGID)
+    description: GID usato per scrivere i file scaricati. 0 = root (consigliato con Calibre-Web Automated).
+  timezone:
+    name: Fuso orario
+    description: Nome del fuso orario IANA, es. Europe/Rome.
+  network_mode:
+    name: Modalità di rete
+    description: "direct = accesso normale, tor = tutto il traffico passa da Tor."
+  calibre_library_check:
+    name: Controllo libreria Calibre
+    description: Segna nei risultati i libri già presenti nella tua libreria Calibre.
+  calibre_library_path:
+    name: Percorso libreria Calibre
+    description: Cartella che contiene metadata.db (il percorso libreria di Calibre-Web Automated).
+  calibre_web_url:
+    name: URL libreria
+    description: Link facoltativo alla libreria mostrato nell'intestazione, es. http://192.168.1.10:8083.
+  log_level:
+    name: Livello di log
+    description: Dettaglio dei log dell'add-on.
+  env_vars:
+    name: Variabili d'ambiente aggiuntive
+    description: >-
+      Variabili d'ambiente aggiuntive per Shelfmark (es. SEARCH_MODE,
+      BOOK_LANGUAGE). Quelle gestite dalle altre opzioni vengono ignorate.
+network:
+  8084/tcp: Interfaccia web

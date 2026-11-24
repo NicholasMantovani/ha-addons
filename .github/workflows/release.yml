@@ -1,11 +1,11 @@
 name: Release
 
-# Publishes a GitHub release (tag v<version>) for the add-on version found in
-# config.yaml, with the matching CHANGELOG.md section as release notes.
-# Idempotent: if the release for the current version already exists, nothing
-# happens. Runs on every push to main, on demand, and is called by
-# sync-upstream.yml after an automatic version bump (pushes made with
-# GITHUB_TOKEN do not trigger `push` workflows).
+# For every add-on folder, publishes a GitHub release tagged
+# "<addon>-v<version>" for the version found in its config.yaml, using the
+# matching CHANGELOG.md section as release notes.
+# Idempotent: releases that already exist are skipped. Runs on every push to
+# main, on demand, and is called by sync-upstream.yml after automatic bumps
+# (pushes made with GITHUB_TOKEN do not trigger `push` workflows).
 
 on:
   push:
@@ -17,12 +17,9 @@ on:
 permissions:
   contents: write
 
-env:
-  ADDON_DIR: calibre-web-automated
-
 jobs:
   release:
-    name: Publish release for the current add-on version
+    name: Publish missing add-on releases
     runs-on: ubuntu-latest
     concurrency:
       group: release
@@ -34,69 +31,48 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Read add-on version
-        id: version
+      - name: Create releases
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          version="$(sed -nE 's/^version:[[:space:]]*"?([^"[:space:]]+)"?.*$/\1/p' "${ADDON_DIR}/config.yaml" | head -n1)"
-          [[ -n "${version}" ]] || { echo "::error::Unable to read version from config.yaml"; exit 1; }
-          tag="v${version}"
+          target="$(git rev-parse HEAD)"
 
-          if gh release view "${tag}" >/dev/null 2>&1; then
-            echo "Release ${tag} already exists, nothing to do."
-            exists=true
-          else
-            echo "Release ${tag} does not exist yet."
-            exists=false
-          fi
+          for config in */config.yaml; do
+            addon="$(dirname "${config}")"
+            name="$(yq -r '.name' "${config}")"
+            version="$(yq -r '.version' "${config}")"
+            tag="${addon}-v${version}"
 
-          {
-            echo "version=${version}"
-            echo "tag=${tag}"
-            echo "exists=${exists}"
-          } >> "${GITHUB_OUTPUT}"
+            if gh release view "${tag}" >/dev/null 2>&1; then
+              echo "✓ ${tag} already released"
+              continue
+            fi
 
-      - name: Build release notes from CHANGELOG.md
-        if: steps.version.outputs.exists == 'false'
-        env:
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          set -euo pipefail
-          notes="${RUNNER_TEMP}/notes.md"
+            notes="${RUNNER_TEMP}/${addon}-notes.md"
+            # Lines between "## <version>" and the next "## " heading
+            awk -v ver="${version}" '
+              /^## / { if (found) exit; if ($2 == ver) { found = 1; next } }
+              found
+            ' "${addon}/CHANGELOG.md" 2>/dev/null | sed -e '/./,$!d' > "${notes}" || true
 
-          # Lines between "## <version>" and the next "## " heading
-          awk -v ver="${VERSION}" '
-            /^## / { if (found) exit; if ($2 == ver) { found = 1; next } }
-            found
-          ' "${ADDON_DIR}/CHANGELOG.md" | sed -e '/./,$!d' > "${notes}"
-
-          if [[ ! -s "${notes}" ]]; then
-            echo "Calibre-Web Automated add-on ${VERSION}." > "${notes}"
-          fi
+            if [[ ! -s "${notes}" ]]; then
+              echo "${name} add-on ${version}." > "${notes}"
+            fi
 
           cat >> "${notes}" <<EOF
 
           ---
 
           **Install / update:** add \`https://github.com/${GITHUB_REPOSITORY}\` to the
-          Home Assistant add-on store, or update the add-on from
+          Home Assistant add-on store, or update **${name}** from
           *Settings → Add-ons* if it is already installed.
           EOF
 
-          cat "${notes}"
-
-      - name: Create GitHub release
-        if: steps.version.outputs.exists == 'false'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.version.outputs.tag }}
-          VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          set -euo pipefail
-          gh release create "${TAG}" \
-            --title "${VERSION}" \
-            --notes-file "${RUNNER_TEMP}/notes.md" \
-            --target "$(git rev-parse HEAD)" \
-            --latest
+            echo "→ Creating ${tag}"
+            cat "${notes}"
+            gh release create "${tag}" \
+              --title "${name} ${version}" \
+              --notes-file "${notes}" \
+              --target "${target}"
+          done

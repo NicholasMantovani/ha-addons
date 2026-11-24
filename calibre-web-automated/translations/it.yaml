@@ -20,5 +20,10 @@ configuration:
   timezone:
     name: Fuso orario
     description: Nome del fuso orario IANA, es. Europe/Rome.
+  env_vars:
+    name: Variabili d'ambiente aggiuntive
+    description: >-
+      Variabili d'ambiente aggiuntive passate a Calibre-Web Automated
+      (ad esempio NETWORK_SHARE_MODE=true). PUID, PGID e TZ qui vengono ignorate.
 network:
   8083/tcp: Interfaccia web (Calibre-Web, OPDS, Kobo Sync)

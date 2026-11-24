@@ -13,3 +13,5 @@ version bumps are added automatically by the `sync-upstream` workflow.
   inotify-friendly).
 - Application config persisted in the add-on `/data` directory.
 - Configurable PUID, PGID and timezone.
+- `env_vars` option to pass extra environment variables (e.g.
+  `NETWORK_SHARE_MODE=true` for libraries on a NAS).

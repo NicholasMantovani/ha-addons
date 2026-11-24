@@ -45,5 +45,5 @@ LABEL \
     io.hass.arch="${BUILD_ARCH}" \
     io.hass.version="${BUILD_VERSION}" \
     org.opencontainers.image.title="Calibre-Web Automated (Home Assistant add-on)" \
-    org.opencontainers.image.source="https://github.com/NicholasMantovani/ha-calibre-web-automated" \
+    org.opencontainers.image.source="https://github.com/NicholasMantovani/ha-addons" \
     org.opencontainers.image.licenses="GPL-3.0"

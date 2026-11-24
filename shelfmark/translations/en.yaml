@@ -1,0 +1,38 @@
+---
+configuration:
+  download_path:
+    name: Download path
+    description: >-
+      Where downloaded books are saved (inside /share or /media). Use the
+      Calibre-Web Automated ingest folder for automatic import.
+  puid:
+    name: User ID (PUID)
+    description: UID used to write downloaded files. 0 = root (recommended with Calibre-Web Automated).
+  pgid:
+    name: Group ID (PGID)
+    description: GID used to write downloaded files. 0 = root (recommended with Calibre-Web Automated).
+  timezone:
+    name: Timezone
+    description: IANA timezone name, e.g. Europe/Rome.
+  network_mode:
+    name: Network mode
+    description: "direct = normal network access, tor = route all traffic through Tor."
+  calibre_library_check:
+    name: Calibre Library Check
+    description: Mark search results already present in your Calibre library.
+  calibre_library_path:
+    name: Calibre library path
+    description: Folder containing metadata.db (the Calibre-Web Automated library path).
+  calibre_web_url:
+    name: Library URL
+    description: Optional link to your library shown in the header, e.g. http://192.168.1.10:8083.
+  log_level:
+    name: Log level
+    description: Verbosity of the add-on log.
+  env_vars:
+    name: Extra environment variables
+    description: >-
+      Additional Shelfmark environment variables (e.g. SEARCH_MODE,
+      BOOK_LANGUAGE). Variables managed by other options are ignored.
+network:
+  8084/tcp: Web interface

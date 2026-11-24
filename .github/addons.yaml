@@ -1,0 +1,23 @@
+# Upstream tracking for each add-on in this repository.
+#
+# Used by .github/workflows/sync-upstream.yml. One entry per add-on folder:
+#
+#   upstream_repo  GitHub repository whose "latest release" is tracked
+#   image          Docker image used in build.yaml / Dockerfile (without tag).
+#                  The image tag is expected to match the upstream release tag.
+#   auto_update    true  -> the weekly run bumps the add-on automatically
+#                  false -> the weekly run skips it; you can still update it by
+#                           running the workflow manually for that add-on
+#
+# To add a new add-on: create its folder (config.yaml, build.yaml, Dockerfile,
+# CHANGELOG.md with the "<!-- next-entry -->" marker) and add an entry here.
+addons:
+  calibre-web-automated:
+    upstream_repo: crocodilestick/Calibre-Web-Automated
+    image: crocodilestick/calibre-web-automated
+    auto_update: true
+
+  shelfmark:
+    upstream_repo: calibrain/shelfmark
+    image: ghcr.io/calibrain/shelfmark
+    auto_update: true

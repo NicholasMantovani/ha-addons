@@ -20,5 +20,10 @@ configuration:
   timezone:
     name: Timezone
     description: IANA timezone name, e.g. Europe/Rome.
+  env_vars:
+    name: Extra environment variables
+    description: >-
+      Additional environment variables passed to Calibre-Web Automated
+      (for example NETWORK_SHARE_MODE=true). PUID, PGID and TZ are ignored here.
 network:
   8083/tcp: Web interface (Calibre-Web, OPDS, Kobo Sync)

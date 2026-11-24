@@ -9,9 +9,32 @@ permissions:
   contents: read
 
 jobs:
-  addon:
-    name: Add-on configuration (config.yaml / build.yaml)
+  discover:
+    name: Discover add-ons
     runs-on: ubuntu-latest
+    outputs:
+      addons: ${{ steps.find.outputs.addons }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Find add-on folders
+        id: find
+        run: |
+          set -euo pipefail
+          addons="$(find . -mindepth 2 -maxdepth 2 -name config.yaml -printf '%h\n' \
+            | sed 's|^\./||' | sort | jq -R . | jq -cs .)"
+          echo "Add-ons: ${addons}"
+          echo "addons=${addons}" >> "${GITHUB_OUTPUT}"
+
+  addon:
+    name: Add-on linter (${{ matrix.addon }})
+    needs: discover
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        addon: ${{ fromJSON(needs.discover.outputs.addons) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -19,7 +42,7 @@ jobs:
       - name: Run Home Assistant add-on linter
         uses: frenck/action-addon-linter@v2
         with:
-          path: "./calibre-web-automated"
+          path: "./${{ matrix.addon }}"
 
   repository:
     name: Repository metadata and YAML
@@ -29,7 +52,7 @@ jobs:
         uses: actions/checkout@v5
 
       # frenck/action-addon-linter only checks add-on folders, so
-      # repository.yaml is validated here.
+      # repository.yaml and .github/addons.yaml are validated here.
       - name: Validate repository.yaml
         run: |
           set -euo pipefail
@@ -37,11 +60,27 @@ jobs:
           url="$(yq -r '.url' repository.yaml)"
           [[ "${url}" =~ ^https?:// ]] || { echo "::error file=repository.yaml::url must be an http(s) URL"; exit 1; }
 
+      - name: Validate .github/addons.yaml
+        run: |
+          set -euo pipefail
+          status=0
+          for addon in $(yq -r '.addons | keys | .[]' .github/addons.yaml); do
+            for key in upstream_repo image; do
+              if [[ "$(yq -r ".addons.\"${addon}\".${key} // \"\"" .github/addons.yaml)" == "" ]]; then
+                echo "::error file=.github/addons.yaml::${addon}: missing '${key}'"; status=1
+              fi
+            done
+            [[ -f "${addon}/config.yaml" ]] || { echo "::error file=.github/addons.yaml::${addon}: folder or config.yaml not found"; status=1; }
+            grep -q '^<!-- next-entry -->' "${addon}/CHANGELOG.md" 2>/dev/null \
+              || { echo "::error file=${addon}/CHANGELOG.md::missing '<!-- next-entry -->' marker"; status=1; }
+          done
+          exit "${status}"
+
       - name: Lint all YAML files
         run: |
           pipx run yamllint \
             -d "{extends: relaxed, rules: {line-length: disable}}" \
-            repository.yaml calibre-web-automated/ .github/
+            .
 
   shell:
     name: Shell scripts
@@ -51,4 +90,8 @@ jobs:
         uses: actions/checkout@v5
 
       - name: ShellCheck
-        run: shellcheck --shell=bash calibre-web-automated/rootfs/etc/s6-overlay/scripts/*.sh
+        run: |
+          set -euo pipefail
+          mapfile -t scripts < <(find . -path ./.git -prune -o -path '*/rootfs/*' -name '*.sh' -print)
+          printf 'Checking: %s\n' "${scripts[@]}"
+          shellcheck --shell=bash "${scripts[@]}"
