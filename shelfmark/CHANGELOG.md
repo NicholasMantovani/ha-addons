@@ -5,6 +5,13 @@ version bumps are added automatically by the `sync-upstream` workflow.
 
 <!-- next-entry -->
 
+## 1.7.0.1
+
+- Home Assistant Ingress: open Shelfmark from the Home Assistant sidebar,
+  also remotely (Nabu Casa or your own HTTPS access to Home Assistant).
+- The app now listens on 127.0.0.1 only; nginx serves both Ingress (8099)
+  and the direct port 8084, adding the Ingress URL prefix automatically.
+
 ## 1.7.0
 
 - Initial release of the add-on, based on Shelfmark

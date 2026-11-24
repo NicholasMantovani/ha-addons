@@ -16,6 +16,9 @@ Books are stored in `/share` or `/media`, so they are reachable via Samba and
 the Media Browser. Application settings are kept in the add-on data and
 included in Home Assistant backups.
 
+Opens inside Home Assistant through **Ingress** (also remotely), plus a
+direct LAN port.
+
 See the **Documentation** tab for setup, OPDS and Kobo Sync instructions.
 
 [cwa]: https://github.com/crocodilestick/Calibre-Web-Automated

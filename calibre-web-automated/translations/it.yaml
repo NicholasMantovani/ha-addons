@@ -26,4 +26,4 @@ configuration:
       Variabili d'ambiente aggiuntive passate a Calibre-Web Automated
       (ad esempio NETWORK_SHARE_MODE=true). PUID, PGID e TZ qui vengono ignorate.
 network:
-  8083/tcp: Interfaccia web (Calibre-Web, OPDS, Kobo Sync)
+  8083/tcp: Accesso diretto (interfaccia web in LAN, OPDS, Kobo Sync)

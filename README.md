@@ -20,6 +20,12 @@ configurable layer on top of the official upstream image.
 Add-ons are built locally on top of the upstream images, so the first
 installation downloads the full upstream image (about 1 GB each).
 
+Both add-ons support **Home Assistant Ingress**: they open inside Home
+Assistant (and from its sidebar), so they are reachable from outside your
+home wherever Home Assistant is (Home Assistant Cloud or your own HTTPS
+access), with no extra ports to open. Direct LAN ports remain available
+(needed by OPDS readers and Kobo Sync).
+
 ## Add-ons
 
 | | Add-on | Version | Description |

@@ -13,24 +13,24 @@ FROM ${BUILD_FROM}
 ARG BUILD_ARCH
 ARG BUILD_VERSION
 
-# jq is needed to read /data/options.json
+# jq: read /data/options.json and the Supervisor API
+# nginx: front proxy for Ingress (8099) and direct access (8084)
 # hadolint ignore=DL3008
 RUN set -eux; \
-    if ! command -v jq >/dev/null 2>&1; then \
-        apt-get update; \
-        apt-get install -y --no-install-recommends jq; \
-        rm -rf /var/lib/apt/lists/*; \
-    fi
+    apt-get update; \
+    apt-get install -y --no-install-recommends jq nginx; \
+    rm -rf /var/lib/apt/lists/*
 
 COPY rootfs/ /
 
 # Strip CRLF (Windows checkouts) and make the launcher executable
-RUN sed -i 's/\r$//' /usr/local/bin/ha-run.sh \
+RUN sed -i 's/\r$//' /usr/local/bin/ha-run.sh /etc/nginx/ha-proxy-params.conf \
     && chmod 0755 /usr/local/bin/ha-run.sh
 
 # The upstream image keeps ENTRYPOINT ["/usr/bin/dumb-init", "--"] and its own
-# HEALTHCHECK on /api/health. Only the command changes: ha-run.sh translates
-# the add-on options into environment variables, then execs /app/entrypoint.sh.
+# HEALTHCHECK on http://localhost:8084/api/health (now answered through nginx).
+# Only the command changes: ha-run.sh translates the add-on options into
+# environment variables, starts nginx, then execs /app/entrypoint.sh.
 WORKDIR /app
 CMD ["/usr/local/bin/ha-run.sh"]
 

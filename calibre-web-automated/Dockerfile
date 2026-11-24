@@ -19,21 +19,30 @@ ARG BUILD_VERSION
 #   /etc/s6-overlay/s6-rc.d/init-migrations/dependencies.d/init-ha-setup
 #                                                     runs it BEFORE the LSIO init chain
 #   /etc/s6-overlay/scripts/00-ha-setup.sh            the actual setup script
+#   /etc/s6-overlay/s6-rc.d/svc-ha-ingress/        nginx for Home Assistant Ingress
+#   /etc/nginx/ha-ingress.conf                     its configuration
+#
+# nginx: Ingress reverse proxy (X-Ingress-Path -> X-Script-Name)
+# jq: ships with the LinuxServer.io base image; installed only if missing
+# hadolint ignore=DL3008
+RUN set -eux; \
+    apt-get update; \
+    apt-get install -y --no-install-recommends nginx; \
+    if ! command -v jq >/dev/null 2>&1; then \
+        apt-get install -y --no-install-recommends jq; \
+    fi; \
+    rm -rf /var/lib/apt/lists/*
+
 COPY rootfs/ /
 
 # - Strip CRLF in case the repo was checked out on Windows without .gitattributes
-# - Make the script executable (git on Windows does not preserve the +x bit)
-# - jq ships with the LinuxServer.io base image; install it only if missing
-# hadolint ignore=DL3008
+# - Make the scripts executable (git on Windows does not preserve the +x bit)
 RUN set -eux; \
-    find /etc/s6-overlay/s6-rc.d/init-ha-setup /etc/s6-overlay/scripts/00-ha-setup.sh \
+    find /etc/s6-overlay/s6-rc.d/init-ha-setup /etc/s6-overlay/s6-rc.d/svc-ha-ingress \
+        /etc/s6-overlay/scripts/00-ha-setup.sh /etc/nginx/ha-ingress.conf \
         -type f -exec sed -i 's/\r$//' {} +; \
-    chmod 0755 /etc/s6-overlay/scripts/00-ha-setup.sh; \
-    if ! command -v jq >/dev/null 2>&1; then \
-        apt-get update; \
-        apt-get install -y --no-install-recommends jq; \
-        rm -rf /var/lib/apt/lists/*; \
-    fi
+    chmod 0755 /etc/s6-overlay/scripts/00-ha-setup.sh /etc/s6-overlay/s6-rc.d/svc-ha-ingress/run; \
+    nginx -t -c /etc/nginx/ha-ingress.conf
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=180s --retries=3 \
     CMD curl -fsL --connect-timeout 2 --max-time 8 -o /dev/null http://127.0.0.1:8083/ || exit 1

@@ -15,6 +15,9 @@ This add-on saves downloads into the **Calibre-Web Automated** ingest folder
 by default, so new books land in your library automatically, and it can mark
 books you already own.
 
+Opens inside Home Assistant through **Ingress** (also remotely), plus a
+direct LAN port.
+
 See the **Documentation** tab for configuration details.
 
 [shelfmark]: https://github.com/calibrain/shelfmark

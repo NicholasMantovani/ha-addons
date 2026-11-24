@@ -1,7 +1,7 @@
 # Home Assistant add-on configuration
 # https://developers.home-assistant.io/docs/add-ons/configuration
 name: Shelfmark
-version: "1.7.0"
+version: "1.7.0.1"
 slug: shelfmark
 description: >-
   Search and download books and audiobooks from multiple sources, with
@@ -14,11 +14,21 @@ arch:
 # The upstream image uses dumb-init as PID 1: do not add docker-init on top.
 init: false
 
+# Home Assistant Ingress: the web UI opens inside Home Assistant (sidebar /
+# "Open Web UI") and works wherever Home Assistant is reachable, including
+# remotely. Shelfmark runs under URL_BASE=<ingress entry>; nginx adds that
+# prefix to Ingress requests (8099) and to direct requests (8084).
+ingress: true
+ingress_port: 8099
+panel_icon: mdi:book-search
+# Needed to read this add-on's Ingress entry (URL prefix) at startup
+hassio_api: true
+
+# Direct port for LAN access. Can be disabled in the add-on Network section.
 ports:
   8084/tcp: 8084
 ports_description:
-  8084/tcp: Web interface
-webui: "http://[HOST]:[PORT:8084]"
+  8084/tcp: Direct access (web UI on LAN)
 
 # addon_config -> /config (Shelfmark settings, database, artwork cache).
 #   Reachable on the host as /addon_configs/<slug>/ (Samba "addon_configs"

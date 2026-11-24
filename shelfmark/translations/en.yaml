@@ -35,4 +35,4 @@ configuration:
       Additional Shelfmark environment variables (e.g. SEARCH_MODE,
       BOOK_LANGUAGE). Variables managed by other options are ignored.
 network:
-  8084/tcp: Web interface
+  8084/tcp: Direct access (web UI on LAN)

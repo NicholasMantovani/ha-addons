@@ -9,7 +9,9 @@ Calibre installation.
 
 1. Install the add-on and start it. The first start takes a while because CWA
    prepares the Calibre binaries and creates an empty library if needed.
-2. Click **Open Web UI**, or browse to `http://<home-assistant-ip>:8083`.
+2. Click **Open Web UI** (or enable **Show in sidebar** on the add-on Info
+   page) to open it through Home Assistant, or browse to
+   `http://<home-assistant-ip>:8083` on your LAN.
 3. Log in with the default credentials:
 
    | Username | Password   |
@@ -177,6 +179,25 @@ Tips:
 
 Application data survives add-on updates and restarts. Uninstalling the
 add-on removes `/data`, but never touches the library in `/share` or `/media`.
+
+## Access from outside your home (Ingress)
+
+The add-on supports **Home Assistant Ingress**: the web UI opens inside Home
+Assistant, through the same address and login you use for Home Assistant.
+If Home Assistant is reachable from outside (Home Assistant Cloud / Nabu
+Casa, or your own HTTPS reverse proxy / DuckDNS), Calibre-Web Automated is
+too, without opening any extra port. Enable **Show in sidebar** on the
+add-on Info page to get a sidebar entry (Home Assistant administrators only).
+
+Inside Ingress you still log in to Calibre-Web with your Calibre-Web user.
+
+**What does not work through Ingress:** OPDS reader apps and Kobo Sync.
+They connect directly to the app with their own credentials and cannot pass
+through the Home Assistant login. They
+use the direct port `8083`, which works on your LAN. To use them away from
+home, use a VPN (for example the Tailscale add-on) or a dedicated reverse
+proxy for port 8083. If you do not need direct access at all, you can
+disable port 8083 in the add-on **Network** section.
 
 ## Using it with Shelfmark
 

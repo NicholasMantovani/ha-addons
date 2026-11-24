@@ -12,7 +12,9 @@ Cloudflare-protected sources.
 ## First start
 
 1. Review the **Configuration** tab (see below), then start the add-on.
-2. Click **Open Web UI**, or browse to `http://<home-assistant-ip>:8084`.
+2. Click **Open Web UI** (or enable **Show in sidebar** on the add-on Info
+   page) to open it through Home Assistant, or browse to
+   `http://<home-assistant-ip>:8084` on your LAN.
 3. The onboarding wizard guides you through the first settings.
 4. **Enable authentication.** By default Shelfmark has **no login**
    (`AUTH_METHOD=none`): anyone on your network can use it. Go to
@@ -104,6 +106,29 @@ can also be changed from Shelfmark's **Settings** page, where environment
 variables act as defaults. Variables managed by the add-on options (`PUID`,
 `PGID`, `TZ`, `CONFIG_DIR`, `INGEST_DIR`, `USING_TOR`, `USING_WIREGUARD`) are
 ignored here.
+
+## Access from outside your home (Ingress)
+
+The add-on supports **Home Assistant Ingress**: the web UI opens inside Home
+Assistant, through the same address and login you use for Home Assistant.
+If Home Assistant is reachable from outside (Home Assistant Cloud / Nabu
+Casa, or your own HTTPS reverse proxy / DuckDNS), Shelfmark is too, without
+opening any extra port. Enable **Show in sidebar** on the add-on Info page to
+get a sidebar entry (Home Assistant administrators only).
+
+How it works: at startup the add-on asks the Supervisor for its Ingress path
+(`/api/hassio_ingress/<token>`) and sets it as Shelfmark's `URL_BASE`. nginx
+in front of the app adds that prefix automatically, so the direct LAN
+address `http://<home-assistant-ip>:8084/` keeps working too (you are
+redirected to the prefixed URL).
+
+- Do **not** change **URL Base** in Shelfmark's settings: the add-on manages
+  it.
+- If live updates (download progress) do not refresh when you use a custom
+  domain or reverse proxy, add it to `env_vars`:
+  `SOCKETIO_ALLOWED_ORIGINS` = `https://your-domain.example`.
+- If you do not need direct LAN access, you can disable port 8084 in the
+  add-on **Network** section.
 
 ## Sources, indexers and download clients
 
