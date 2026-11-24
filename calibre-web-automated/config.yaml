@@ -10,9 +10,6 @@ url: https://github.com/NicholasMantovani/ha-calibre-web-automated
 arch:
   - aarch64
   - amd64
-startup: application
-boot: auto
-stage: stable
 
 # The upstream image (LinuxServer.io base) ships its own s6-overlay v3 as PID 1.
 # Supervisor's docker-init (tini) must NOT be injected in front of it.
@@ -23,7 +20,8 @@ ports:
 ports_description:
   8083/tcp: Web interface (Calibre-Web, OPDS, Kobo Sync)
 webui: "http://[HOST]:[PORT:8083]"
-watchdog: "tcp://[HOST]:[PORT:8083]"
+# Health monitoring: native Docker HEALTHCHECK in the Dockerfile
+# (the `watchdog` option is obsolete).
 
 # Books live in /share or /media so they are reachable via Samba and the
 # Media Browser. Application state lives in /data (always mounted, persistent,
