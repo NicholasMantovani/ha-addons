@@ -1,0 +1,54 @@
+name: Lint
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  addon:
+    name: Add-on configuration (config.yaml / build.yaml)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Run Home Assistant add-on linter
+        uses: frenck/action-addon-linter@v2
+        with:
+          path: "./calibre-web-automated"
+
+  repository:
+    name: Repository metadata and YAML
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      # frenck/action-addon-linter only checks add-on folders, so
+      # repository.yaml is validated here.
+      - name: Validate repository.yaml
+        run: |
+          set -euo pipefail
+          yq -e '.name != null and .url != null and .maintainer != null' repository.yaml
+          url="$(yq -r '.url' repository.yaml)"
+          [[ "${url}" =~ ^https?:// ]] || { echo "::error file=repository.yaml::url must be an http(s) URL"; exit 1; }
+
+      - name: Lint all YAML files
+        run: |
+          pipx run yamllint \
+            -d "{extends: relaxed, rules: {line-length: disable}}" \
+            repository.yaml calibre-web-automated/ .github/
+
+  shell:
+    name: Shell scripts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: ShellCheck
+        run: shellcheck --shell=bash calibre-web-automated/rootfs/etc/s6-overlay/scripts/*.sh

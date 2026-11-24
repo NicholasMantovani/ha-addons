@@ -1,0 +1,5 @@
+# Home Assistant add-on repository definition
+# https://developers.home-assistant.io/docs/add-ons/repository
+name: Calibre-Web Automated Add-on Repository
+url: https://github.com/NicholasMantovani/ha-calibre-web-automated
+maintainer: Nicholas Mantovani

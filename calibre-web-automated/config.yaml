@@ -1,0 +1,55 @@
+# Home Assistant add-on configuration
+# https://developers.home-assistant.io/docs/add-ons/configuration
+name: Calibre-Web Automated
+version: "4.0.8"
+slug: calibre_web_automated
+description: >-
+  Calibre-Web Automated: a modern web e-book library with automatic ingest,
+  format conversion, metadata enforcement, OPDS and Kobo Sync.
+url: https://github.com/NicholasMantovani/ha-calibre-web-automated
+arch:
+  - aarch64
+  - amd64
+startup: application
+boot: auto
+stage: stable
+
+# The upstream image (LinuxServer.io base) ships its own s6-overlay v3 as PID 1.
+# Supervisor's docker-init (tini) must NOT be injected in front of it.
+init: false
+
+ports:
+  8083/tcp: 8083
+ports_description:
+  8083/tcp: Web interface (Calibre-Web, OPDS, Kobo Sync)
+webui: "http://[HOST]:[PORT:8083]"
+watchdog: "tcp://[HOST]:[PORT:8083]"
+
+# Books live in /share or /media so they are reachable via Samba and the
+# Media Browser. Application state lives in /data (always mounted, persistent,
+# included in add-on backups).
+map:
+  - type: share
+    read_only: false
+  - type: media
+    read_only: false
+
+# `mount --bind` needs CAP_SYS_ADMIN. Docker's default AppArmor profile
+# (applied by Supervisor when no custom profile is shipped) denies mount(2)
+# even with that capability, so AppArmor must be disabled for this add-on.
+privileged:
+  - SYS_ADMIN
+apparmor: false
+
+options:
+  library_path: /share/calibre/library
+  ingest_path: /share/calibre/ingest
+  puid: 0
+  pgid: 0
+  timezone: Europe/Rome
+schema:
+  library_path: str
+  ingest_path: str
+  puid: int(0,65535)
+  pgid: int(0,65535)
+  timezone: str

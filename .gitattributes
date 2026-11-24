@@ -1,0 +1,4 @@
+# Force LF line endings: shell scripts and s6 service files break with CRLF
+* text=auto eol=lf
+*.png binary
+*.jpg binary

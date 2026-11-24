@@ -1,0 +1,24 @@
+---
+configuration:
+  library_path:
+    name: Library path
+    description: >-
+      Folder containing the Calibre library (metadata.db). Must be inside
+      /share or /media. Created automatically if missing.
+  ingest_path:
+    name: Ingest path
+    description: >-
+      Drop folder for new books. Files are imported automatically and then
+      DELETED from this folder. Must be inside /share or /media and must not
+      be inside the library folder.
+  puid:
+    name: User ID (PUID)
+    description: UID that owns the library files. 0 = root (best for Samba).
+  pgid:
+    name: Group ID (PGID)
+    description: GID that owns the library files. 0 = root (best for Samba).
+  timezone:
+    name: Timezone
+    description: IANA timezone name, e.g. Europe/Rome.
+network:
+  8083/tcp: Web interface (Calibre-Web, OPDS, Kobo Sync)

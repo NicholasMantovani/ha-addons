@@ -1,0 +1,139 @@
+name: Sync upstream release
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+env:
+  UPSTREAM_REPO: crocodilestick/Calibre-Web-Automated
+  UPSTREAM_IMAGE: crocodilestick/calibre-web-automated
+  ADDON_DIR: calibre-web-automated
+
+jobs:
+  sync:
+    name: Check for a new Calibre-Web Automated release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - name: Compare upstream release with add-on version
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+
+          release="$(gh api "repos/${UPSTREAM_REPO}/releases/latest")"
+          tag="$(jq -r '.tag_name' <<<"${release}")"
+          url="$(jq -r '.html_url' <<<"${release}")"
+          published="$(jq -r '.published_at' <<<"${release}" | cut -dT -f1)"
+
+          # Home Assistant expects a plain version: strip a leading v / V.
+          version="${tag#[vV]}"
+          if ! [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.+-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Upstream tag '${tag}' is not a semver-like version"
+            exit 1
+          fi
+
+          current="$(sed -nE 's/^version:[[:space:]]*"?([^"[:space:]]+)"?.*$/\1/p' "${ADDON_DIR}/config.yaml" | head -n1)"
+          echo "Current add-on version : ${current}"
+          echo "Latest upstream release: ${tag} (${version}), published ${published}"
+
+          update=false
+          if [[ "${version}" == "${current}" ]]; then
+            echo "Already up to date."
+          elif [[ "$(printf '%s\n%s\n' "${current}" "${version}" | sort -V | tail -n1)" != "${version}" ]]; then
+            echo "::warning::Upstream ${version} is older than ${current}; not downgrading."
+          else
+            update=true
+          fi
+
+          {
+            echo "update=${update}"
+            echo "tag=${tag}"
+            echo "version=${version}"
+            echo "url=${url}"
+            echo "published=${published}"
+          } >> "${GITHUB_OUTPUT}"
+
+      # GitHub releases are sometimes published before the Docker image is
+      # pushed: only bump once the tag exists for every architecture we build.
+      - name: Verify the Docker image is published
+        id: image
+        if: steps.check.outputs.update == 'true'
+        env:
+          TAG: ${{ steps.check.outputs.tag }}
+        run: |
+          set -euo pipefail
+          ready=true
+          if ! archs="$(curl -fsSL "https://hub.docker.com/v2/repositories/${UPSTREAM_IMAGE}/tags/${TAG}" \
+                         | jq -r '.images[].architecture' | sort -u)"; then
+            echo "::notice::Image ${UPSTREAM_IMAGE}:${TAG} is not on Docker Hub yet; retrying on the next run."
+            ready=false
+          else
+            for arch in amd64 arm64; do
+              if ! grep -qx "${arch}" <<<"${archs}"; then
+                echo "::notice::Image ${UPSTREAM_IMAGE}:${TAG} has no ${arch} variant yet; retrying on the next run."
+                ready=false
+              fi
+            done
+          fi
+          echo "ready=${ready}" >> "${GITHUB_OUTPUT}"
+
+      - name: Update add-on files
+        if: steps.check.outputs.update == 'true' && steps.image.outputs.ready == 'true'
+        env:
+          TAG: ${{ steps.check.outputs.tag }}
+          VERSION: ${{ steps.check.outputs.version }}
+          URL: ${{ steps.check.outputs.url }}
+          PUBLISHED: ${{ steps.check.outputs.published }}
+        run: |
+          set -euo pipefail
+
+          # config.yaml: add-on version
+          sed -i -E "s|^version:.*$|version: \"${VERSION}\"|" "${ADDON_DIR}/config.yaml"
+
+          # build.yaml + Dockerfile: base image tag
+          sed -i -E "s|(${UPSTREAM_IMAGE}):[^\"[:space:]]+|\1:${TAG}|g" \
+            "${ADDON_DIR}/build.yaml" "${ADDON_DIR}/Dockerfile"
+
+          # CHANGELOG.md: new entry right below the marker
+          grep -q '^<!-- next-entry -->' "${ADDON_DIR}/CHANGELOG.md" || {
+            echo "::error file=${ADDON_DIR}/CHANGELOG.md::missing '<!-- next-entry -->' marker"
+            exit 1
+          }
+          ENTRY="$(printf '## %s\n\n- Bump Calibre-Web Automated to [%s](%s) (upstream release of %s).\n  See the upstream release notes for details.' \
+            "${VERSION}" "${TAG}" "${URL}" "${PUBLISHED}")" \
+          awk '!done && /^<!-- next-entry -->/ { print; print ""; print ENVIRON["ENTRY"]; done = 1; next } { print }' \
+            "${ADDON_DIR}/CHANGELOG.md" > "${RUNNER_TEMP}/CHANGELOG.md"
+          mv "${RUNNER_TEMP}/CHANGELOG.md" "${ADDON_DIR}/CHANGELOG.md"
+
+          git --no-pager diff
+
+      - name: Commit and push to main
+        if: steps.check.outputs.update == 'true' && steps.image.outputs.ready == 'true'
+        env:
+          TAG: ${{ steps.check.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${ADDON_DIR}/config.yaml" "${ADDON_DIR}/build.yaml" \
+                  "${ADDON_DIR}/Dockerfile" "${ADDON_DIR}/CHANGELOG.md"
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git commit -m "Bump Calibre-Web Automated to ${TAG}"
+          git push origin HEAD:main

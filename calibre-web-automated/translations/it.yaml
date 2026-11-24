@@ -1,0 +1,24 @@
+---
+configuration:
+  library_path:
+    name: Percorso libreria
+    description: >-
+      Cartella che contiene la libreria Calibre (metadata.db). Deve trovarsi
+      in /share o /media. Viene creata automaticamente se non esiste.
+  ingest_path:
+    name: Percorso ingest
+    description: >-
+      Cartella di deposito per i nuovi libri. I file vengono importati
+      automaticamente e poi ELIMINATI da questa cartella. Deve trovarsi in
+      /share o /media e non deve essere dentro la cartella della libreria.
+  puid:
+    name: ID utente (PUID)
+    description: UID proprietario dei file della libreria. 0 = root (ideale per Samba).
+  pgid:
+    name: ID gruppo (PGID)
+    description: GID proprietario dei file della libreria. 0 = root (ideale per Samba).
+  timezone:
+    name: Fuso orario
+    description: Nome del fuso orario IANA, es. Europe/Rome.
+network:
+  8083/tcp: Interfaccia web (Calibre-Web, OPDS, Kobo Sync)
