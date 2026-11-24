@@ -2,7 +2,8 @@ name: Sync upstream release
 
 on:
   schedule:
-    - cron: "0 6 * * *"
+    # Every Monday at 06:00 UTC
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -21,6 +22,8 @@ jobs:
   sync:
     name: Check for a new Calibre-Web Automated release
     runs-on: ubuntu-latest
+    outputs:
+      pushed: ${{ steps.push.outputs.pushed }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v5
@@ -122,6 +125,7 @@ jobs:
           git --no-pager diff
 
       - name: Commit and push to main
+        id: push
         if: steps.check.outputs.update == 'true' && steps.image.outputs.ready == 'true'
         env:
           TAG: ${{ steps.check.outputs.tag }}
@@ -137,3 +141,14 @@ jobs:
           fi
           git commit -m "Bump Calibre-Web Automated to ${TAG}"
           git push origin HEAD:main
+          echo "pushed=true" >> "${GITHUB_OUTPUT}"
+
+  # Pushes made with GITHUB_TOKEN do not trigger release.yml's `push` event,
+  # so the release is published explicitly here.
+  release:
+    name: Publish GitHub release
+    needs: sync
+    if: needs.sync.outputs.pushed == 'true'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/release.yml

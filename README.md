@@ -1,7 +1,13 @@
+<p align="center">
+  <img src=".github/images/banner.png" alt="Calibre-Web Automated add-on logo" width="320">
+</p>
+
 # Home Assistant Add-on: Calibre-Web Automated
 
+[![Release](https://img.shields.io/github/v/release/NicholasMantovani/ha-calibre-web-automated?sort=semver)](https://github.com/NicholasMantovani/ha-calibre-web-automated/releases/latest)
 [![Lint](https://github.com/NicholasMantovani/ha-calibre-web-automated/actions/workflows/lint.yml/badge.svg)](https://github.com/NicholasMantovani/ha-calibre-web-automated/actions/workflows/lint.yml)
 [![Sync upstream](https://github.com/NicholasMantovani/ha-calibre-web-automated/actions/workflows/sync-upstream.yml/badge.svg)](https://github.com/NicholasMantovani/ha-calibre-web-automated/actions/workflows/sync-upstream.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Supports aarch64](https://img.shields.io/badge/aarch64-yes-green.svg)
 ![Supports amd64](https://img.shields.io/badge/amd64-yes-green.svg)
 
@@ -50,15 +56,25 @@ The full documentation is in the add-on's **Documentation** tab
 ## Automatic updates
 
 The [`sync-upstream`](.github/workflows/sync-upstream.yml) workflow runs every
-day at 06:00 UTC (and on demand). When a new upstream release is published
+Monday at 06:00 UTC (and on demand). When a new upstream release is published
 **and** its Docker image is available for amd64 and arm64, it:
 
 1. updates `version` in `config.yaml` (with the `v` prefix removed);
 2. updates the image tag in `build.yaml` and `Dockerfile`;
 3. adds an entry to `CHANGELOG.md` linking the upstream release notes;
-4. commits and pushes to `main`.
+4. commits and pushes to `main`;
+5. publishes a GitHub release `v<version>` with the changelog entry as notes.
 
 Home Assistant then shows the update in the add-on store.
+
+## Releases
+
+The [`release`](.github/workflows/release.yml) workflow publishes a GitHub
+release for the version in `config.yaml` whenever `main` changes (and is
+called by `sync-upstream` after an automatic bump). It is idempotent: if the
+release `v<version>` already exists, nothing happens. To release a manual
+change, bump `version` in `config.yaml`, add a `## <version>` section to
+`CHANGELOG.md` and push to `main`.
 
 > Commits pushed with the default `GITHUB_TOKEN` do not trigger other
 > workflows, so `lint.yml` does not run on those automatic commits. If `main`
@@ -68,12 +84,11 @@ Home Assistant then shows the update in the add-on store.
 
 - To ship add-on-only fixes between upstream releases, bump the version with a
   suffix (for example `4.0.8-1`) so Home Assistant offers the update.
-- Add `icon.png` (128×128) and `logo.png` (about 250×100) to
-  `calibre-web-automated/` for the store listing.
 
 ## License
 
-Add a `LICENSE` file for the add-on packaging in this repository.
-Calibre-Web Automated itself is licensed under GPL-3.0 by its authors.
+The add-on packaging in this repository is released under the
+[MIT License](LICENSE). Calibre-Web Automated itself is licensed under
+GPL-3.0 by its authors.
 
 [cwa]: https://github.com/crocodilestick/Calibre-Web-Automated
