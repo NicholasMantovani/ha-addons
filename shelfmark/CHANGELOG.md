@@ -14,7 +14,11 @@ version bumps are added automatically by the `sync-upstream` workflow.
 - Shelfmark no longer runs under the Ingress path: nginx adds it for Ingress
   requests only (from the `X-Ingress-Path` header), so OIDC callback URLs on
   the direct port no longer contain it.
+- Through Ingress, live updates use long-polling instead of a websocket.
 - The add-on no longer needs Supervisor API access.
+- If you used port 8084 with 1.7.0.1: addresses under
+  `/api/hassio_ingress/<token>/` no longer work there, so update bookmarks
+  and any OIDC redirect URI to the root form.
 
 ## 1.7.0.1
 

@@ -104,8 +104,8 @@ env_vars:
 See the upstream [environment variables reference][envvars]. Most settings
 can also be changed from Shelfmark's **Settings** page, where environment
 variables act as defaults. Variables managed by the add-on options (`PUID`,
-`PGID`, `TZ`, `CONFIG_DIR`, `INGEST_DIR`, `USING_TOR`, `USING_WIREGUARD`) are
-ignored here.
+`PGID`, `TZ`, `CONFIG_DIR`, `INGEST_DIR`, `USING_TOR`, `USING_WIREGUARD`,
+`FLASK_HOST`, `FLASK_PORT`, `URL_BASE`) are ignored here.
 
 ## Access from outside your home (Ingress)
 
@@ -127,8 +127,9 @@ in front of the app adds the Ingress path
   Shelfmark at the root.
 - OIDC login works on the direct port: register
   `https://your-domain.example/api/auth/oidc/callback` with your identity
-  provider. It does not work through Ingress, where the Home Assistant login
-  already applies.
+  provider. OIDC does not work through Ingress (the callback cannot reach
+  Shelfmark there): sign in with a local account through Ingress, or use the
+  direct port.
 - If live updates (download progress) do not refresh when you use a custom
   domain or reverse proxy, add it to `env_vars`:
   `SOCKETIO_ALLOWED_ORIGINS` = `https://your-domain.example`.
