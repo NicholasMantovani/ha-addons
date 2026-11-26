@@ -13,7 +13,7 @@ FROM ${BUILD_FROM}
 ARG BUILD_ARCH
 ARG BUILD_VERSION
 
-# jq: read /data/options.json and the Supervisor API
+# jq: read /data/options.json
 # nginx: front proxy for Ingress (8099) and direct access (8084)
 # hadolint ignore=DL3008
 RUN set -eux; \
@@ -25,6 +25,7 @@ COPY rootfs/ /
 
 # Strip CRLF (Windows checkouts) and make the launcher executable
 RUN sed -i 's/\r$//' /usr/local/bin/ha-run.sh /etc/nginx/ha-proxy-params.conf \
+        /etc/nginx/ha-shelfmark.conf \
     && chmod 0755 /usr/local/bin/ha-run.sh
 
 # The upstream image keeps ENTRYPOINT ["/usr/bin/dumb-init", "--"] and its own

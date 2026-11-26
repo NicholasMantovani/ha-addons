@@ -104,8 +104,8 @@ env_vars:
 See the upstream [environment variables reference][envvars]. Most settings
 can also be changed from Shelfmark's **Settings** page, where environment
 variables act as defaults. Variables managed by the add-on options (`PUID`,
-`PGID`, `TZ`, `CONFIG_DIR`, `INGEST_DIR`, `USING_TOR`, `USING_WIREGUARD`) are
-ignored here.
+`PGID`, `TZ`, `CONFIG_DIR`, `INGEST_DIR`, `USING_TOR`, `USING_WIREGUARD`,
+`FLASK_HOST`, `FLASK_PORT`, `URL_BASE`) are ignored here.
 
 ## Access from outside your home (Ingress)
 
@@ -116,14 +116,20 @@ Casa, or your own HTTPS reverse proxy / DuckDNS), Shelfmark is too, without
 opening any extra port. Enable **Show in sidebar** on the add-on Info page to
 get a sidebar entry (Home Assistant administrators only).
 
-How it works: at startup the add-on asks the Supervisor for its Ingress path
-(`/api/hassio_ingress/<token>`) and sets it as Shelfmark's `URL_BASE`. nginx
-in front of the app adds that prefix automatically, so the direct LAN
-address `http://<home-assistant-ip>:8084/` keeps working too (you are
-redirected to the prefixed URL).
+How it works: Shelfmark runs at the root, like a plain install, and the
+direct port `http://<home-assistant-ip>:8084/` serves it as-is. You can point
+a reverse proxy or Tailscale Serve at that port on a domain root and use
+Shelfmark's own login, without a Home Assistant account. For Ingress, nginx
+in front of the app adds the Ingress path
+(`/api/hassio_ingress/<token>`) that Home Assistant sends with each request.
 
-- Do **not** change **URL Base** in Shelfmark's settings: the add-on manages
-  it.
+- **Base Path** in Shelfmark's settings is ignored: the add-on always runs
+  Shelfmark at the root.
+- OIDC login works on the direct port: register
+  `https://your-domain.example/api/auth/oidc/callback` with your identity
+  provider. OIDC does not work through Ingress (the callback cannot reach
+  Shelfmark there): sign in with a local account through Ingress, or use the
+  direct port.
 - If live updates (download progress) do not refresh when you use a custom
   domain or reverse proxy, add it to `env_vars`:
   `SOCKETIO_ALLOWED_ORIGINS` = `https://your-domain.example`.
