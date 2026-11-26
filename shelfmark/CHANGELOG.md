@@ -5,6 +5,17 @@ version bumps are added automatically by the `sync-upstream` workflow.
 
 <!-- next-entry -->
 
+## 1.7.0.2
+
+- The direct port 8084 serves Shelfmark at the root again, like a plain
+  install. In 1.7.0.1 it showed a blank page at `/` and only worked under the
+  Ingress path, which broke reverse proxies and Tailscale Serve on a domain
+  root.
+- Shelfmark no longer runs under the Ingress path: nginx adds it for Ingress
+  requests only (from the `X-Ingress-Path` header), so OIDC callback URLs on
+  the direct port no longer contain it.
+- The add-on no longer needs Supervisor API access.
+
 ## 1.7.0.1
 
 - Home Assistant Ingress: open Shelfmark from the Home Assistant sidebar,
